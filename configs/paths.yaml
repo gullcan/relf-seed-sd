@@ -1,0 +1,5 @@
+project_root: "D:/ReLF"
+dataset_root: "D:/SEED-SD"
+
+data_reports_dir: "D:/ReLF/data/reports"
+reports_dir: "D:/ReLF/reports"
