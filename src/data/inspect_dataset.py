@@ -204,9 +204,59 @@ def check_eeg_eye_alignment(session: str, subject_file: str):
 
 
 
+def check_all_eeg_eye_alignments():
+    dataset_root = get_dataset_root()
+
+    sessions = ["session_1", "session_2", "session_3"]
+
+    total_pairs = 0
+    failed_pairs = []
+
+    for session in sessions:
+        eeg_dir = dataset_root / "eeg_features" / session
+        eye_dir = dataset_root / "eye_features" / session
+
+        eeg_files = sorted(eeg_dir.glob("*.npy"))
+        
+        print(f"\nSession: {session}")
+        print(f"EEG files: {len(eeg_files)}")
+
+        for eeg_file in eeg_files:
+            subject_file = eeg_file.name
+            eye_file = eye_dir / subject_file
+
+            total_pairs += 1
+
+            if not eye_file.exists():
+                failed_pairs.append((session, subject_file,"missing eye file"))
+                continue
+
+            eeg_data = np.load(eeg_file, allow_pickle=True).item()
+            eye_data = np.load(eye_file, allow_pickle=True).item()
 
 
+            for clip_name in eeg_data.keys():
+                eeg_windows = eeg_data[clip_name].shape[0]
+                eye_windows = eye_data[clip_name].shape[0]
 
+                if eeg_windows != eye_windows:
+                    failed_pairs.append(
+                        (session, subject_file, f"{clip_name}: EEG={eeg_windows}, Eye={eye_windows}")
+                    )
+        print(f"Checked session: {session}")
+
+    print("\n--- ALL EEG / EYE ALİGNMENT SUMMARY ---")
+    print(f"Total file pairs checked: {total_pairs}")
+    print(f"Failed pairs: {len(failed_pairs)}")
+
+    if failed_pairs:
+        for item in failed_pairs:
+            print(item)
+    else:
+        print("All EEG and Eye feature files are temporally aligned.")
+
+
+   
 
 
 
@@ -239,6 +289,10 @@ if __name__ == "__main__":
 
     print("\n--- EEG / EYE ALIGNMENT CHECK ---")
     check_eeg_eye_alignment("session_1", "sub10_20200903.npy")
+
+    print("\n--- ALL EEG / EYE ALIGNMENT CHECK---")
+    check_all_eeg_eye_alignments()
+
 
     
 # Eğer bu dosya doğrudan çalıştırılıyorsa, list_top_level_contents fonksiyonunu çağırır ve dataset_root dizininin içeriğini listeler.
