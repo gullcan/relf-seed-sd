@@ -90,6 +90,70 @@ def build_subject_samples(session: str, subject_file: str) -> list[dict]:
 
     return samples        
 
+def build_full_dataset_index() -> pd.DataFrame:
+
+    labels_df = load_clip_labels()
+    label_lookup = labels_df.set_index("clip").to_dict(orient="index")
+
+    dataset_root = get_dataset_root()
+
+    sessions = ["session_1", "session_2", "session_3"]
+
+    rows = []
+
+    for session in sessions:
+        eeg_dir = dataset_root / "eeg_features" / session
+        eeg_files = sorted(eeg_dir.glob("*.npy"))
+
+        for eeg_file in eeg_files:
+            subject_file = eeg_file.name
+            subject_id = subject_file.split("_")[0]
+
+            eeg_data, eye_data = load_subject_features(
+                session=session,
+                subject_file=subject_file
+            )
+
+            for clip_name in eeg_data.keys():
+                eeg_clip = eeg_data[clip_name]
+                eye_clip = eye_data[clip_name]
+
+                if eeg_clip.shape[0] != eye_clip.shape[0]:
+                    raise ValueError(
+                        f"Window count mismatch for {session}/{subject_file}/{clip_name}: "
+                        f"EEG={eeg_clip.shape[0]}, Eye={eye_clip.shape[0]}"
+                    )
+                
+                label_info = label_lookup[clip_name]
+
+                for window_index in range(eeg_clip.shape[0]):
+                    rows.append({
+                        "session": session,
+                        "subject_file": subject_file,
+                        "subject_id": subject_id,
+                        "clip": clip_name,
+                        "window_index": window_index,
+                        "label": label_info["Label"],
+                        "emotion": label_info["Emotion"],
+                    })
+    index_df = pd.DataFrame(rows)
+    return index_df                  
+
+def save_full_dataset_index() -> Path:
+    dataset_root = get_dataset_root()
+
+    index_df = build_full_dataset_index()
+
+    outputh_path = dataset_root.parent / "ReLF" / "data" / "reports" / "full_dataset_index.csv"
+    outputh_path.parent.mkdir(parents=True, exist_ok=True)
+
+    index_df.to_csv(outputh_path, index=False)
+
+    print(f"Saved full dataset index to: {outputh_path}")
+    print(f"Total samples: {len(index_df)}")
+
+    return outputh_path
+
 
 if __name__ == "__main__":
     labels= load_clip_labels()
@@ -126,5 +190,17 @@ if __name__ == "__main__":
     print(f"First emotion: {first_sample['emotion']}")
     print(f"First clip: {first_sample['clip']}")
     print(f"First window index: {first_sample['window_index']}")
+
+
+    print("\n--- Full Dataset Index Test ---")
+
+    index_df = build_full_dataset_index()
+
+    print(index_df.head())
+    print(index_df.shape)
+    print(index_df["emotion"].value_counts())
+
+    print("\n--- Save Full Dataset Index ---")
+    save_full_dataset_index()
 
 
