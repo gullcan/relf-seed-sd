@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import numpy as np
+import csv
 
 from src.utils.paths import get_dataset_root
 
@@ -257,7 +258,62 @@ def check_all_eeg_eye_alignments():
 
 
    
+def collect_dataset_window_statistics():
+    dataset_root = get_dataset_root()
+    sessions = ["session_1", "session_2", "session_3"]
+    rows = []
+    for session in sessions:
+        eeg_dir = dataset_root / "eeg_features" / session
+        eeg_files = sorted(eeg_dir.glob("*.npy"))
 
+        for eeg_file in eeg_files:
+            eeg_data = np.load(eeg_file, allow_pickle=True).item()
+
+            subject_file = eeg_file.name
+            subject_id = subject_file.split("_")[0]
+
+            for clip_name, clip_array in eeg_data.items():
+                window_count = clip_array.shape[0]
+                feature_shape = clip_array.shape[1:]
+
+                rows.append({
+                    "session": session,
+                    "subject_file": subject_file,
+                    "subject_id": subject_id,
+                    "clip": clip_name,
+                    "window_count": window_count,
+                    "feature_shape": str(feature_shape),
+                })
+    return rows                
+
+# notebook bu row listesini direkt DataFrame çeviricek.
+# py dosyası veri toplama işini yapacak, notebook ise analiz/görselleştirme yapacak. 
+
+
+def save_window_statistics_report():
+    dataset_root = get_dataset_root()
+    rows = collect_dataset_window_statistics()
+
+    output_path = dataset_root.parent / "ReLF" / "data" / "reports" / "window_statistics.csv"
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    fieldnames = [
+        "session",
+        "subject_file",
+        "subject_id",
+        "clip",
+        "window_count",
+        "feature_shape",
+    ]
+
+    with open(output_path, "w", newline="", encoding="utf-8") as file:
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+
+    print(f"Saved window statistics report to: {output_path}")
+    print(f"Total rows: {len(rows)}")    
 
 
 if __name__ == "__main__":
@@ -292,6 +348,9 @@ if __name__ == "__main__":
 
     print("\n--- ALL EEG / EYE ALIGNMENT CHECK---")
     check_all_eeg_eye_alignments()
+
+    print("\n--- SAVE WINDOW STATISTICS REPORT ---")
+    save_window_statistics_report()
 
 
     
