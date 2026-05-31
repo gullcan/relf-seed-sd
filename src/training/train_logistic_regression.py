@@ -68,10 +68,29 @@ def train_logistic_regression_on_fold(
 
 if __name__ == "__main__":
 
-    results = train_logistic_regression_on_fold(
-        fold=0,
-        max_train_samples=5000,
-        max_test_samples=2000,
-    )
-    print("\nResults")
-    print(results)
+    all_results = []
+
+    for fold in [0,1,2]:
+        print(f"\n========================")
+        print(f"Training fold {fold}")
+        print(f"==========================")
+
+        results = train_logistic_regression_on_fold(
+            fold=fold,
+            max_train_samples=5000,
+            max_test_samples=2000,
+        )
+        all_results.append(results)
+        print(results)
+
+    accuracies = [result["accuracy"] for result in all_results]
+    f1_scores = [result["weighted_f1"] for result in all_results]
+    precisions = [result["weighted_precision"] for result in all_results]    
+
+    print("\nFinal 3-Fold Results")
+    print(f"Accuracy: {np.mean(accuracies):4f} ± {np.std(accuracies):.4f}")
+    print(f"Weighted F1: {np.mean(f1_scores):4f} ± {np.std(f1_scores):.4f}")
+    print(f"Weighted Precision: {np.mean(precisions):4f} ± {np.std(precisions):.4f}")
+    
+
+    

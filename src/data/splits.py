@@ -67,6 +67,7 @@ def apply_clip_folds_to_index(
         test_clips = set(split["test_clips"])
 
         fold_df = index_df.copy()
+        fold_df["original_index"] = fold_df.index
         fold_df["fold"] = fold_idx
 
         fold_df["split"] = fold_df["clip"].apply(

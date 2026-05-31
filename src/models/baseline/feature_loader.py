@@ -42,7 +42,7 @@ def load_features_for_split(
     labels = []
 
     for _, row in selected_df.iterrows():
-        sample_idx = row.name % len(dataset)
+        sample_idx = int(row["original_index"])
 
         sample = dataset[sample_idx]
 
