@@ -56,6 +56,54 @@ def summarize_fold_emotions(
     return summary_df        
 
 
+def apply_clip_folds_to_index(
+        index_df: pd.DataFrame,
+        folds: dict
+) -> pd.DataFrame:
+
+    split_rows = []
+    for fold_idx, split in folds.items():
+        train_clips = set(split["train_clips"])
+        test_clips = set(split["test_clips"])
+
+        fold_df = index_df.copy()
+        fold_df["fold"] = fold_idx
+
+        fold_df["split"] = fold_df["clip"].apply(
+            lambda clip: "test" if clip in test_clips else "train"
+        )
+        split_rows.append(fold_df)
+
+    split_index_df = pd.concat(
+        split_rows,
+        ignore_index=True
+    )
+
+    return split_index_df    
+
+
+def save_subject_dependent_split_index(
+        output_path: str = "D:/ReLF/data/reports/subject_dependent_split_index.csv"
+):
+    from src.data.build_dataset import load_clip_labels
+    clip_label_df = load_clip_labels()
+    folds = create_subject_dependent_clip_folds(
+        clip_label_df=clip_label_df
+    )
+    index_df = pd.read_csv("D:/ReLF/data/reports/full_dataset_index.csv")
+
+    split_index_df = apply_clip_folds_to_index(
+        index_df=index_df,
+        folds=folds
+    )
+    split_index_df.to_csv(output_path, index=False)
+
+    print(f"Saved subject-dependent split index to: {output_path}")
+    print(f"Rows: {len(split_index_df)}")
+
+
+
+
 
 if __name__ == "__main__":
     from src.data.build_dataset import load_clip_labels
@@ -77,4 +125,29 @@ if __name__ == "__main__":
         summary_df
         .groupby(["fold","emotion"])
         .size()
+    )
+    print("\nApply folds to full dataset index:")
+
+    index_df = pd.read_csv("D:/ReLF/data/reports/full_dataset_index.csv")
+    split_index_df = apply_clip_folds_to_index(
+        index_df=index_df,
+        folds=folds
+    )
+    print(split_index_df.head())
+    print(split_index_df.shape)
+
+    print("\nSplit counts:")
+    print(
+        split_index_df
+        .groupby(["fold", "split"])
+        .size()
+    )
+    print("\nEmotion counts by fold and split:")
+    print(
+        split_index_df
+        .groupby(["fold", "split", "emotion"])
+        .size()
     )    
+
+    print("\nSave subject-dependent split index:")
+    save_subject_dependent_split_index()
