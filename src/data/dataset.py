@@ -1,6 +1,7 @@
 from pathlib import Path
 import numpy as np
 import pandas as pd
+import torch
 
 from torch.utils.data import Dataset
 from src.utils.paths import get_dataset_root
@@ -27,6 +28,10 @@ class SEEDSDDataset(Dataset):
         clip = row["clip"]
         window_index = int(row["window_index"])
         label = int(row["label"])
+        label = torch.tensor(
+            label,
+            dtype=torch.long
+        )
 
         eeg_path = self.dataset_root / "eeg_features" / session / subject_file
         eye_path = self.dataset_root / "eye_features" / session / subject_file
@@ -34,8 +39,14 @@ class SEEDSDDataset(Dataset):
         eeg_data = np.load(eeg_path, allow_pickle=True).item()
         eye_data = np.load(eye_path, allow_pickle=True).item()
 
-        eeg = eeg_data[clip][window_index]
-        eye = eye_data[clip][window_index]
+        eeg = torch.tensor(
+            eeg_data[clip][window_index],
+            dtype=torch.float32
+        )
+        eye = torch.tensor(
+            eye_data[clip][window_index],
+            dtype=torch.float32
+        )
 
         sample = {
             "eeg": eeg,
