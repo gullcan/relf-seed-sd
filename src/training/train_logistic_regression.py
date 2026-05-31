@@ -69,6 +69,8 @@ def train_logistic_regression_on_fold(
 if __name__ == "__main__":
 
     all_results = []
+    import pandas as pd
+    from pathlib import Path
 
     for fold in [0,1,2]:
         print(f"\n========================")
@@ -91,6 +93,17 @@ if __name__ == "__main__":
     print(f"Accuracy: {np.mean(accuracies):4f} ± {np.std(accuracies):.4f}")
     print(f"Weighted F1: {np.mean(f1_scores):4f} ± {np.std(f1_scores):.4f}")
     print(f"Weighted Precision: {np.mean(precisions):4f} ± {np.std(precisions):.4f}")
+
+    results_df = pd.DataFrame(all_results)
+
+    output_dir = Path("D:/ReLF/reports/baselines")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    output_path = output_dir / "logistic_regression_subject_dependent_subset.csv"
+
+    results_df.to_csv(output_path, index=False)
+
+    print(f"\nSaved results to: {output_path}")
     
 
     
