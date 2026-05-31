@@ -5,6 +5,7 @@ from pathlib import Path
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, f1_score, precision_score
+from sklearn.metrics import confusion_matrix
 
 from src.models.baseline.feature_loader import load_features_for_split
 
@@ -61,6 +62,11 @@ def train_random_forest_on_fold(
         "weighted_f1": weighted_f1,
         "weighted_precision": weighted_precision,
     }
+    print("\nClass Distribution (Test)")
+    print(np.bincount(y_test))
+
+    print("\nClass Distribution (Prediction)")
+    print(np.bincount(y_pred))
     return results
 
 
