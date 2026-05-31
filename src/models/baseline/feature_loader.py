@@ -20,7 +20,7 @@ def build_multimodal_feature(
 
     return multimodal_feature
 
-def load_features_for_splits(
+def load_features_for_split(
         split_index_csv_path: str,
         fold: int,
         split: str,
@@ -76,7 +76,7 @@ if __name__ == "__main__":
 
     print("\n--- Load Features For Split Test ---")
 
-    X, y = load_features_for_splits(
+    X, y = load_features_for_split(
         split_index_csv_path="D:/ReLF/data/reports/subject_dependent_split_index.csv",
         fold=0,
         split="train",
